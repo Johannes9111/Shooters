@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquor Selection</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h2 { margin-bottom: 20px; }
+        .main-container { display: flex; justify-content: space-between; width: 80%; }
+        .selection-container { display: flex; flex-wrap: wrap; gap: 20px; width: 65%; }
+        .item { text-align: center; border: 2px solid transparent; padding: 5px; width: 150px; }
+        .item img { width: 150px; height: 150px; padding: 5px; }
+        .needed { font-style: italic; }
+        .hidden { display: none; }
+
+        #cart-container { width: 35%; text-align: left; }
+        #cart { border: 2px solid black; padding: 10px; width: 100%; text-align: left; }
+        #cart h2 { margin-bottom: 10px; }
+        .cart-header { display: flex; font-weight: bold; padding-bottom: 10px; gap: 10px; }
+        .cart-item { display: flex; align-items: center; padding: 5px; gap: 10px; }
+        .cart-item img { width: 50px; height: 50px; }
+        .name { width: 180px; text-align: left; }
+        .price { width: 80px; text-align: right; font-weight: bold; }
+        .trash-icon { cursor: pointer; font-size: 20px; color: red; margin-left: auto; padding-right: 10px; } /* Delete button now fully functional */
+        #totalCost { font-size: 20px; font-weight: bold; margin-top: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <h2>Select the liquor you're bringing:</h2>
+
+    <div class="main-container">
+        <div class="selection-container">
+            <div class="item" id="vodka-item">
+                <img src="https://www.elpalaciodehierro.com/on/demandware.static/-/Sites-palacio-master-catalog/default/dw6c36325a/images/12654333/large/12654333_x1.jpg" alt="Vodka">
+                <p>Vodka - R180</p>
+                <p class="needed">(Needed: <span id="vodka-needed">4</span>)</p>
+                <button onclick="addToCart('vodka')" id="vodka-btn">Add</button>
+            </div>
+            <div class="item" id="peppermint-item">
+                <img src="https://grapeexpectations.co.za/wp-content/uploads/2023/11/d868fe3c-2c4a-4864-bc76-1f45e6ffc112.4e22172afe045f7a221665f449850ce0-700x719.jpeg" alt="Peppermint Liqueur">
+                <p>Peppermint - R220</p>
+                <p class="needed">(Needed: <span id="peppermint-needed">2</span>)</p>
+                <button onclick="addToCart('peppermint')" id="peppermint-btn">Add</button>
+            </div>
+            <div class="item" id="amarula-item">
+                <img src="https://drinkland.co.nz/wp-content/uploads/2020/04/Amarula-Marula-Fruit-Cream-South-Africa-Liqueur-700ml-04.jpg" alt="Amarula">
+                <p>Amarula - R220</p>
+                <p class="needed">(Needed: <span id="amarula-needed">2</span>)</p>
+                <button onclick="addToCart('amarula')" id="amarula-btn">Add</button>
+            </div>
+            <div class="item" id="bubblegum-item">
+                <img src="https://res.cloudinary.com/agrimark/image/upload/c_pad,h_570,w_570/v1/uploads/assets/202677-1-a-Tiqqle-Tequila-Bubblegum-Liquer-750ml-a3b62f.png?_a=AAAH2AI" alt="Bubblegum Liqueur">
+                <p>Bubblegum - R220</p>
+                <p class="needed">(Needed: <span id="bubblegum-needed">1</span>)</p>
+                <button onclick="addToCart('bubblegum')" id="bubblegum-btn">Add</button>
+            </div>
+        </div>
+
+        <div id="cart-container">
+            <h2>Your Cart</h2>
+            <div id="cart">
+                <div class="cart-header">
+                    <span>Image</span>
+                    <span class="name">Name</span>
+                    <span class="price">Price</span>
+                    <span></span> <!-- Empty label for remove column -->
+                </div>
+                <div id="selectedList"></div>
+            </div>
+            <p id="totalCost">Total: R0</p>
+        </div>
+    </div>
+
+    <script>
+        let liquorData = {
+            vodka: { price: 180, name: "Vodka", needed: 4, image: "https://www.elpalaciodehierro.com/on/demandware.static/-/Sites-palacio-master-catalog/default/dw6c36325a/images/12654333/large/12654333_x1.jpg" },
+            peppermint: { price: 220, name: "Peppermint Liqueur", needed: 2, image: "https://grapeexpectations.co.za/wp-content/uploads/2023/11/d868fe3c-2c4a-4864-bc76-1f45e6ffc112.4e22172afe045f7a221665f449850ce0-700x719.jpeg" },
+            amarula: { price: 220, name: "Amarula", needed: 2, image: "https://drinkland.co.nz/wp-content/uploads/2020/04/Amarula-Marula-Fruit-Cream-South-Africa-Liqueur-700ml-04.jpg" },
+            bubblegum: { price: 220, name: "Bubblegum Liqueur", needed: 1, image: "https://res.cloudinary.com/agrimark/image/upload/c_pad,h_570,w_570/v1/uploads/assets/202677-1-a-Tiqqle-Tequila-Bubblegum-Liquer-750ml-a3b62f.png?_a=AAAH2AI" }
+        };
+
+        let selectedLiquors = [];
+        let totalPrice = 0;
+
+        function addToCart(type) {
+            if (liquorData[type].needed > 0) {
+                selectedLiquors.push(type);
+                liquorData[type].needed--;
+                document.getElementById(type + "-needed").textContent = liquorData[type].needed;
+
+                if (liquorData[type].needed === 0) {
+                    document.getElementById(type + "-btn").classList.add("hidden");
+                }
+
+                updateCart();
+            }
+        }
+
+        function removeItem(type) {
+            let index = selectedLiquors.indexOf(type);
+            if (index > -1) {
+                selectedLiquors.splice(index, 1);
+                liquorData[type].needed++;
+                document.getElementById(type + "-needed").textContent = liquorData[type].needed;
+
+                if (liquorData[type].needed > 0) {
+                    document.getElementById(type + "-btn").classList.remove("hidden");
+                }
+
+                updateCart();
+            }
+        }
+
+        function updateCart() {
+            let selectedList = document.getElementById("selectedList");
+            selectedList.innerHTML = "";
+            totalPrice = 0;
+
+            selectedLiquors.forEach(type => {
+                let item = liquorData[type];
+                totalPrice += item.price;
+                selectedList.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <span class="name">${item.name}</span>
+                        <span class="price">R${item.price}</span>
+                        <span class="trash-icon" onclick="removeItem('${type}')">❌</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById("totalCost").textContent = `Total: R${totalPrice}`;
+        }
+    </script>
+
+</body>
+</html>
